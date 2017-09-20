@@ -1,0 +1,151 @@
+<link rel="import" href="../polymer-channels-card/polymer-channels-card.html">
+<link rel="import" href="../paper-button/paper-button.html">
+<link rel="import" href="../paper-input/paper-textarea.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout-classes.html">
+
+<dom-module id="card-photo-swipe-composer">
+  <template>
+    <style is="custom-style" include="iron-flex iron-flex-alignment"></style>
+    <div style="padding: 5px;">
+      <div>
+        <textarea id="items" style="width:100%;font-family:monospace;font-size:10px;resize:none;box-sizing:border-box;" rows="10"
+          wrap="off"></textarea>
+        <div style="margin:8px 0;font-size:12px;font-style:italic;">For more information on configuring photo array, see <a href="http://photoswipe.com/documentation/getting-started.html">PhotoSwipe</a>          documentation.</div>
+        <paper-button on-click="onSendClick" raised>Send</paper-button>
+      </div>
+    </div>
+  </template>
+  <script>
+    class CardPhotoSwipeComposer extends PolymerChannelsCardComposer {
+      static get is() { return 'card-photo-swipe-composer'; }
+      // Add other script support needed to assemble the initialization data based on user interaction in the composer
+      connectedCallback() {
+        super.connectedCallback();
+        this.$.items.value = JSON.stringify([
+          {
+            src: 'https://www.html5rocks.com/en/tutorials/device/orientation/dm1.png',
+            w: 200,
+            h: 267
+          },
+          {
+            src: 'https://www.html5rocks.com/en/tutorials/device/orientation/dm2.png',
+            w: 200,
+            h: 267
+          }
+        ], null, 3);
+      }
+      onSendClick() {
+        try {
+          const items = JSON.parse(this.$.items.value);
+          this.send({ items: items });
+        } catch (err) {
+          console.log("Invalid input", err);
+        }
+      }
+    }
+    window.customElements.define(CardPhotoSwipeComposer.is, CardPhotoSwipeComposer);
+  </script>
+</dom-module>
+
+<dom-module id="card-photo-swipe-viewer">
+  <script src="./photoswipe/photoswipe.min.js"></script>
+  <script src="./photoswipe/photoswipe-ui-default.min.js"></script>
+  <link rel="import" type="css" href="./photoswipe/photoswipe.css">
+  <link rel="import" type="css" href="./photoswipe/default-skin/default-skin.css">
+  <template>
+    <div style="position:relative;width:100%;height:500px;">
+      <!-- See http://photoswipe.com/documentation/getting-started.html -->
+      <div id="pswp" class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+        <!-- Background of PhotoSwipe. 
+                     It's a separate element as animating opacity is faster than rgba(). -->
+        <div class="pswp__bg"></div>
+
+        <!-- Slides wrapper with overflow:hidden. -->
+        <div class="pswp__scroll-wrap">
+
+          <!-- Container that holds slides. 
+                        PhotoSwipe keeps only 3 of them in the DOM to save memory.
+                        Don't modify these 3 pswp__item elements, data is added later on. -->
+          <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+          </div>
+
+          <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+          <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+              <!--  Controls are self-explanatory. Order can be changed. -->
+
+              <div class="pswp__counter"></div>
+
+              <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+              <button class="pswp__button pswp__button--share" title="Share"></button>
+
+              <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+              <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+              <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+              <!-- element will get class pswp__preloader--active when preloader is running -->
+              <div class="pswp__preloader">
+                <div class="pswp__preloader__icn">
+                  <div class="pswp__preloader__cut">
+                    <div class="pswp__preloader__donut"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+              <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+                        </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+                        </button>
+
+            <div class="pswp__caption">
+              <div class="pswp__caption__center"></div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </template>
+  <script>
+    class CardPhotoSwipeViewer extends PolymerChannelsCardViewer {
+      static get is() { return 'card-photo-swipe-viewer'; }
+      connectedCallback() {
+        super.connectedCallback();
+        var options = {
+          index: 0,
+          modal: false,
+          closeOnScroll: false,
+          closeOnVerticalDrag: false,
+          escKey: false,
+          modal: false,
+          shareEl: false,
+          closeEl: false
+        };
+        var pswpElement = this.$.pswp;
+        var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, this.data.items, options);
+        gallery.listen('updateScrollOffset', function (_offset) {
+          var r = pswpElement.getBoundingClientRect();
+          _offset.x += r.left;
+          _offset.y += r.top;
+        });
+        gallery.init();
+      }
+    }
+    window.customElements.define(CardPhotoSwipeViewer.is, CardPhotoSwipeViewer);
+  </script>
+</dom-module>
